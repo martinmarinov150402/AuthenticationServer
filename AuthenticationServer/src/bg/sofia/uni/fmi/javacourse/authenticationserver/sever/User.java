@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.javacourse.authenticationServer.sever;
+package bg.sofia.uni.fmi.javacourse.authenticationserver.sever;
 
 public class User {
     private String username;
@@ -19,6 +19,4 @@ public class User {
     public String getPassHash() {
         return passHash;
     }
-
-
 }

@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.javacourse.authenticationServer.sever.exceptions;
+package bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions;
 
 public class UserDoesntExistException extends RuntimeException {
     public UserDoesntExistException() {
