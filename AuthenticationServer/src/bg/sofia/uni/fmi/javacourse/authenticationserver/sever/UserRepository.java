@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.javacourse.authenticationserver.sever;
 
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidSessionException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UnauthorizedException;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UserDoesntExistException;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.WrongPasswordException;
 
@@ -53,11 +54,50 @@ public class UserRepository {
         }
     }
 
+    public void updateUser(int sessionId,
+                           String newUserName,
+                           String newFirstName,
+                           String newLastName,
+                           String newEmail) {
+        if (sessionId == -1) {
+            throw new UnauthorizedException();
+        }
+        UserSession session = loginSession(sessionId);
+        if (newUserName != null) {
+            session.getUser().setUsername(newUserName);
+        }
+        if (newFirstName != null) {
+            session.getUser().setFirstName(newFirstName);
+        }
+        if (newLastName != null) {
+            session.getUser().setLastName(newLastName);
+        }
+        if (newEmail != null) {
+            session.getUser().setEmail(newEmail);
+        }
+    }
+
     public UserSession loginSession(int sessionId) {
         if (sessions.containsKey(sessionId)) {
             return sessions.get(sessionId);
         } else {
             throw new InvalidSessionException("This session is invalid or expired");
+        }
+    }
+
+    public void logout(int sessionId) {
+        if (!sessions.containsKey(sessionId)) {
+            throw new InvalidSessionException();
+        } else {
+            sessions.remove(sessionId);
+        }
+    }
+
+    public void updatePassword(int sessionId, String oldPassword, String newPassword) throws NoSuchAlgorithmException {
+        UserSession us = loginSession(sessionId);
+        String oldPasswordHash = hash(oldPassword);
+        if (oldPasswordHash.equals(us.getUser().getPassHash())) {
+            us.getUser().setPassHash(hash(newPassword));
         }
     }
 }

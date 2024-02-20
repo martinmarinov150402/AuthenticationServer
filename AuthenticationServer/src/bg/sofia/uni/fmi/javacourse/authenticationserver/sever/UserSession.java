@@ -3,8 +3,8 @@ package bg.sofia.uni.fmi.javacourse.authenticationserver.sever;
 import java.time.LocalDateTime;
 
 public class UserSession {
-    User user;
-    int sessionId;
+    private User user;
+    private int sessionId;
 
     LocalDateTime expireTime;
 
@@ -17,5 +17,9 @@ public class UserSession {
 
     public int getSessionId() {
         return sessionId;
+    }
+
+    public User getUser() {
+        return user;
     }
 }

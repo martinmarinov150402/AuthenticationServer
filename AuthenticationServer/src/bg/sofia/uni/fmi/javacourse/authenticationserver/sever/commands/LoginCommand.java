@@ -18,8 +18,7 @@ public class LoginCommand implements Command {
         try {
             UserSession us = Main.userRepository.loginUser(username, password);
             return us.getSessionId();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 

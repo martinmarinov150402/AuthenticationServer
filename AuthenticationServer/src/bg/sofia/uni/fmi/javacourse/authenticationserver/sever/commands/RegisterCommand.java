@@ -2,7 +2,7 @@ package bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands;
 
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.Main;
 
-public class RegisterCommand implements Command{
+public class RegisterCommand implements Command {
 
     //private static final boolean secured = false;
 
@@ -27,8 +27,7 @@ public class RegisterCommand implements Command{
 
         try {
             Main.userRepository.createUser(username, password, firstName, lastName, email);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return 0;
