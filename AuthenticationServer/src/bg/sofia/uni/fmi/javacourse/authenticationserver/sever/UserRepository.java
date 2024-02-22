@@ -13,6 +13,8 @@ import java.security.MessageDigest;
 public class UserRepository {
     private HashMap<String, User> userContainer;
     private HashMap<Integer, UserSession> sessions;
+    
+
 
     private static int sessionCount = 0;
 
@@ -34,6 +36,15 @@ public class UserRepository {
         User user = new User(username, hash(password), firstName, lastName, email);
         userContainer.put(username, user);
         return user;
+    }
+
+    public void removeUser(String username) {
+        sessions.forEach((id, session) -> {
+            if (session.getUser().getUsername().equals(username)) {
+                logout(id);
+            }
+        });
+        userContainer.remove(username);
     }
 
     public UserSession loginUser(String username, String password) throws NoSuchAlgorithmException {
