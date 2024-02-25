@@ -7,6 +7,12 @@ import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.Unautho
 public class DeleteUserCommand implements Command {
     int sessionId;
     String username;
+
+    public DeleteUserCommand(int sessionId, String username) {
+        this.sessionId = sessionId;
+        this.username = username;
+    }
+
     public int execute() {
         if (Main.adminRepository.checkAdminBySession(sessionId)) {
             Main.userRepository.removeUser(username);

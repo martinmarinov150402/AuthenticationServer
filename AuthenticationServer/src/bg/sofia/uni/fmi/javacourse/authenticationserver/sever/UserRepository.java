@@ -34,6 +34,7 @@ public class UserRepository {
             throws NoSuchAlgorithmException {
 
         User user = new User(username, hash(password), firstName, lastName, email);
+        System.out.println("Registering hashed with username " + username + "and password " + hash(password));
         userContainer.put(username, user);
         return user;
     }
@@ -50,7 +51,9 @@ public class UserRepository {
     public UserSession loginUser(String username, String password) throws NoSuchAlgorithmException {
         if (userContainer.containsKey(username)) {
             User user = userContainer.get(username);
+            System.out.println("Logging with username " + username + "and password " + hash(password));
             if (user.getPassHash().equals(hash(password))) {
+                System.out.println("Successful login!");
                 LocalDateTime expTime = LocalDateTime.now();
                 expTime = expTime.plusSeconds(Config.SESSION_TTL);
                 UserSession us = new UserSession(user, sessionCount++, expTime);

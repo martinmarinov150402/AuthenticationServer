@@ -27,6 +27,7 @@ public class RegisterCommand implements Command {
 
         try {
             Main.userRepository.createUser(username, password, firstName, lastName, email);
+            System.out.println("Registering with username " + username + "and password " + password);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
