@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.javacourse.authenticationserver.sever;
 
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable {
     private String username;
     private String passHash;
     private String firstName;
@@ -55,4 +57,5 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
+
 }

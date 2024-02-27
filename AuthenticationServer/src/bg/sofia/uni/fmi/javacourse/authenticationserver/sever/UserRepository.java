@@ -4,7 +4,16 @@ import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.Invalid
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UnauthorizedException;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UserDoesntExistException;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.WrongPasswordException;
-
+/*
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+*/
+import java.io.*;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -13,7 +22,7 @@ import java.security.MessageDigest;
 public class UserRepository {
     private HashMap<String, User> userContainer;
     private HashMap<Integer, UserSession> sessions;
-    
+
 
 
     private static int sessionCount = 0;
@@ -21,6 +30,28 @@ public class UserRepository {
     public UserRepository() {
         userContainer = new HashMap<>();
         sessions = new HashMap<>();
+        File file = new File("users.db");
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            ObjectInputStream input = new ObjectInputStream(new FileInputStream(file));
+            User tmp;
+            do {
+                tmp = (User)input.readObject();
+                userContainer.put(tmp.getUsername(), tmp);
+            }
+            while(tmp != null);
+            input.close();
+
+        } catch (EOFException e) {
+            e.toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     private String hash(String str) throws NoSuchAlgorithmException {
@@ -36,6 +67,14 @@ public class UserRepository {
         User user = new User(username, hash(password), firstName, lastName, email);
         System.out.println("Registering hashed with username " + username + "and password " + hash(password));
         userContainer.put(username, user);
+        File file = new File("users.db");
+        try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(file, true))) {
+            output.writeObject(user);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return user;
     }
 
