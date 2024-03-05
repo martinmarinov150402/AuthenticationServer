@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin;
 
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.Main;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserSession;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.audit.ChangeResourceEntry;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.audit.UserEntry;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.Command;
@@ -14,19 +15,21 @@ public class RemoveAdminCommand implements Command {
     int sessionId;
     String username;
 
+    UserSession session;
+
     public RemoveAdminCommand(int sessionId, String username) {
         this.sessionId = sessionId;
         this.username = username;
-
-        UserEntry userEntry = new UserEntry(Main.userRepository.loginSession(sessionId).getUser().getUsername(),
-                "TODO");
+        session = Main.userRepository.loginSession(sessionId);
+        UserEntry userEntry = new UserEntry(session.getUser().getUsername(),
+                session.getIp());
         ChangeResourceEntry entry = new ChangeResourceEntry(LocalDateTime.now(), userEntry,
                 "is trying to remove admin access of", username);
     }
 
     public int execute() {
-        UserEntry userEntry = new UserEntry(Main.userRepository.loginSession(sessionId).getUser().getUsername(),
-                "TODO");
+        UserEntry userEntry = new UserEntry(session.getUser().getUsername(),
+                session.getIp());
         if (Main.adminRepository.checkAdminBySession(sessionId)) {
             if (Main.adminRepository.adminsCount() == 1) {
                 ChangeResourceEntry entry = new ChangeResourceEntry(LocalDateTime.now(), userEntry,

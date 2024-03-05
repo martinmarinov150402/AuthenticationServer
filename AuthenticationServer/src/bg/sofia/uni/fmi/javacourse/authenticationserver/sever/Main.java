@@ -9,6 +9,10 @@ import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.LogoutCom
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.AddAdminCommand;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.DeleteUserCommand;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.RemoveAdminCommand;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidSessionException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UnauthorizedException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UserDoesntExistException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.WrongPasswordException;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -22,12 +26,17 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class Main {
+
+    public static final int USER_DOESNT_EXIST = -404;
+    public static final int UNAUTHORIZED = -401;
+    public static final int WRONG_PASSWORD = -456;
+    public static final int INVALID_SESSION = -457;
     public static UserRepository userRepository;
     public static AdminRepository adminRepository;
 
     public static AuditRepository auditRepository;
 
-    static Command resolveLogin(String[] args) {
+    static Command resolveLogin(String[] args, String ip) {
         Command command;
         String username = null;
         String password = null;
@@ -41,7 +50,7 @@ public class Main {
                 sessionId = Integer.parseInt(args[i + 1]);
             }
         }
-        command = new LoginCommand(username, password, sessionId);
+        command = new LoginCommand(username, password, sessionId, ip);
         return command;
     }
 
@@ -169,11 +178,11 @@ public class Main {
         return command;
     }
 
-    private static int resolveCommand(String cmd) {
+    private static int resolveCommand(String cmd, String ip, ByteBuffer buffer) {
         Command command = null;
         String[] args = cmd.split(" ");
         if (args[0].equals("login")) {
-            command = resolveLogin(args);
+            command = resolveLogin(args, ip);
         }
         if (args[0].equals("register")) {
             command = resolveRegister(args);
@@ -197,7 +206,18 @@ public class Main {
             command = resolveDeleteUser(args);
         }
         assert command != null;
-        return command.execute();
+        try {
+            return command.execute();
+        } catch (UserDoesntExistException e) {
+
+            return USER_DOESNT_EXIST;
+        } catch (WrongPasswordException e) {
+            return WRONG_PASSWORD;
+        } catch (InvalidSessionException e) {
+            return INVALID_SESSION;
+        } catch (UnauthorizedException e) {
+            return UNAUTHORIZED;
+        }
     }
 
     public static void main(String[] args) {
@@ -234,10 +254,17 @@ public class Main {
                         buffer.flip();
                         String cmd = new String(buffer.array(), StandardCharsets.UTF_8);
                         cmd = cmd.split("\0")[0];
-                        int res = resolveCommand(cmd);
+                        int res = resolveCommand(cmd, sc.getRemoteAddress().toString(), buffer);
                         buffer.clear();
-                        buffer.putInt(res);
-                        System.out.println("Message sending code: " + res);
+                        if (res < 0) {
+                            if (res == USER_DOESNT_EXIST) {
+                                buffer.put("User doesn't exist!".getBytes());
+                            }
+                        } else {
+                            buffer.putInt(res);
+
+                        }
+                        System.out.println("Message sending: " + res);
                         buffer.flip();
                         sc.write(buffer);
 

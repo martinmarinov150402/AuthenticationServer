@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin;
 
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.Main;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserSession;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.audit.ChangeResourceEntry;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.audit.UserEntry;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.Command;
@@ -16,9 +17,8 @@ public class AddAdminCommand implements Command {
     public AddAdminCommand(int sessionId, String username) {
         this.sessionId = sessionId;
         this.username = username;
-
-        UserEntry userEntry = new UserEntry(Main.userRepository.loginSession(sessionId).getUser().getUsername(),
-                "TODO");
+        UserSession session = Main.userRepository.loginSession(sessionId);
+        UserEntry userEntry = new UserEntry(session.getUser().getUsername(), session.getIp());
 
         ChangeResourceEntry entry = new ChangeResourceEntry(LocalDateTime.now(), userEntry,
                 "is trying to give admin access to", username);

@@ -87,7 +87,7 @@ public class UserRepository {
         userContainer.remove(username);
     }
 
-    public UserSession loginUser(String username, String password) throws NoSuchAlgorithmException {
+    public UserSession loginUser(String username, String password) throws NoSuchAlgorithmException, UserDoesntExistException {
         if (userContainer.containsKey(username)) {
             User user = userContainer.get(username);
             System.out.println("Logging with username " + username + "and password " + hash(password));

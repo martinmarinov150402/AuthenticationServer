@@ -6,6 +6,8 @@ public class UserSession {
     private User user;
     private int sessionId;
 
+    private String ip;
+
     LocalDateTime expireTime;
 
     public UserSession(User user, int sessionId, LocalDateTime expireTime) {
@@ -21,5 +23,13 @@ public class UserSession {
 
     public User getUser() {
         return user;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
     }
 }
