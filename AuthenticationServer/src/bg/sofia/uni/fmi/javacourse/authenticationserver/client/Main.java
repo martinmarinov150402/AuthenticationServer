@@ -35,7 +35,10 @@ public class Main {
                 socketChannel.read(buffer);
                 buffer.flip();
 
-                int reply = buffer.getInt();
+                byte[] byteArray = new byte[buffer.remaining()];
+                buffer.get(byteArray);
+                String reply = new String(byteArray, "UTF-8");
+
                 System.out.println("Response: " + reply);
             }
         } catch (IOException e) {

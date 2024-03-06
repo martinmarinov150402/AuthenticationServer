@@ -180,6 +180,7 @@ public class Main {
 
     private static int resolveCommand(String cmd, String ip, ByteBuffer buffer) {
         Command command = null;
+        System.out.println(cmd);
         String[] args = cmd.split(" ");
         if (args[0].equals("login")) {
             command = resolveLogin(args, ip);
@@ -258,10 +259,10 @@ public class Main {
                         buffer.clear();
                         if (res < 0) {
                             if (res == USER_DOESNT_EXIST) {
-                                buffer.put("User doesn't exist!".getBytes());
+                                buffer.put("User doesn't exist!".getBytes(StandardCharsets.UTF_8));
                             }
                         } else {
-                            buffer.putInt(res);
+                            buffer.put(Integer.toString(res).getBytes(StandardCharsets.UTF_8));
 
                         }
                         System.out.println("Message sending: " + res);
