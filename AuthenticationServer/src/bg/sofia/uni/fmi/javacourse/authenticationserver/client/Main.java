@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class Main {
@@ -13,7 +14,6 @@ public class Main {
     private static ByteBuffer buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
 
     public static void main(String[] args) {
-
         try (SocketChannel socketChannel = SocketChannel.open();
              Scanner scanner = new Scanner(System.in)) {
             socketChannel.connect(new InetSocketAddress(SERVER_HOST, SERVER_PORT));
@@ -24,7 +24,6 @@ public class Main {
                 if ("quit".equals(message)) {
                     break;
                 }
-
                 buffer.clear();
                 buffer.put(message.getBytes());
                 buffer.putChar('\0');
@@ -37,8 +36,7 @@ public class Main {
 
                 byte[] byteArray = new byte[buffer.remaining()];
                 buffer.get(byteArray);
-                String reply = new String(byteArray, "UTF-8");
-
+                String reply = new String(byteArray, StandardCharsets.UTF_8);
                 System.out.println("Response: " + reply);
             }
         } catch (IOException e) {

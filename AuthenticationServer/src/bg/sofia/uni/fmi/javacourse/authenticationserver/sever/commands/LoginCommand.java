@@ -4,6 +4,7 @@ import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.Main;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserSession;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.audit.FailedLoginEntry;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.audit.UserEntry;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.LockedAccountException;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UserDoesntExistException;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.WrongPasswordException;
 
@@ -27,7 +28,7 @@ public class LoginCommand implements Command {
     }
 
     @Override
-    public int execute() throws UserDoesntExistException {
+    public int execute() throws UserDoesntExistException, LockedAccountException {
         try {
             System.out.println("Logging with username " + username + "and password " + password);
             UserSession us;
@@ -43,7 +44,7 @@ public class LoginCommand implements Command {
             System.out.println("Wrong password!");
             UserEntry userEntry = new UserEntry(username, ip);
             Main.auditRepository.addEntry(new FailedLoginEntry(LocalDateTime.now(), userEntry));
-            return -1;
+            throw new WrongPasswordException();
         }
         //return 1;
     }

@@ -1,9 +1,18 @@
 package bg.sofia.uni.fmi.javacourse.authenticationserver.sever;
 
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidSessionException;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UnauthorizedException;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UserDoesntExistException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.LockedAccountException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UnauthorizedException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidSessionException;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.WrongPasswordException;
+
+/*
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UserDoesntExistException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.LockedAccountException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UnauthorizedException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidSessionException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.WrongPasswordException;
+ */
 /*
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +22,15 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 */
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+import java.io.EOFException;
+
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -87,9 +104,14 @@ public class UserRepository {
         userContainer.remove(username);
     }
 
-    public UserSession loginUser(String username, String password) throws NoSuchAlgorithmException, UserDoesntExistException {
+    public UserSession loginUser(String username, String password) throws NoSuchAlgorithmException,
+                                                                          UserDoesntExistException,
+                                                                          LockedAccountException {
         if (userContainer.containsKey(username)) {
             User user = userContainer.get(username);
+            if (user.isLocked()) {
+                throw new LockedAccountException("User is temporary locked");
+            }
             System.out.println("Logging with username " + username + "and password " + hash(password));
             if (user.getPassHash().equals(hash(password))) {
                 System.out.println("Successful login!");
@@ -100,6 +122,7 @@ public class UserRepository {
 
                 return us;
             } else {
+                user.addFailedAttempt();
                 throw new WrongPasswordException("Wrong password!");
             }
         } else {

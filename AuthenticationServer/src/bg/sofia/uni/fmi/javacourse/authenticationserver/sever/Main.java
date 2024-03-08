@@ -9,10 +9,13 @@ import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.LogoutCom
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.AddAdminCommand;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.DeleteUserCommand;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.RemoveAdminCommand;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidSessionException;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UnauthorizedException;
+
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.LockedAccountException;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UserDoesntExistException;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.WrongPasswordException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UnauthorizedException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.OnlyAdminException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidSessionException;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -31,6 +34,9 @@ public class Main {
     public static final int UNAUTHORIZED = -401;
     public static final int WRONG_PASSWORD = -456;
     public static final int INVALID_SESSION = -457;
+    public static final int ONLY_ADMIN = -850;
+
+    public static final int LOCKED_ACCOUNT = -975;
     public static UserRepository userRepository;
     public static AdminRepository adminRepository;
 
@@ -178,39 +184,42 @@ public class Main {
         return command;
     }
 
-    private static int resolveCommand(String cmd, String ip, ByteBuffer buffer) {
-        Command command = null;
-        System.out.println(cmd);
-        String[] args = cmd.split(" ");
+    private static Command checkCommand(String[] args, String ip) {
         if (args[0].equals("login")) {
-            command = resolveLogin(args, ip);
+            return resolveLogin(args, ip);
         }
         if (args[0].equals("register")) {
-            command = resolveRegister(args);
+            return resolveRegister(args);
         }
         if (args[0].equals("update-user")) {
-            command = resolveUpdate(args);
+            return resolveUpdate(args);
         }
         if (args[0].equals("reset-password")) {
-            command = resolveResetPassword(args);
+            return resolveResetPassword(args);
         }
         if (args[0].equals("logout")) {
-            command = resolveLogout(args);
+            return resolveLogout(args);
         }
         if (args[0].equals("add-admin-user")) {
-            command = resolveAddAdmin(args);
+            return resolveAddAdmin(args);
         }
         if (args[0].equals("remove-admin-user")) {
-            command = resolveRemoveAdmin(args);
+            return resolveRemoveAdmin(args);
         }
         if (args[0].equals("delete-user")) {
-            command = resolveDeleteUser(args);
+            return resolveDeleteUser(args);
         }
+        return null;
+    }
+
+    private static int resolveCommand(String cmd, String ip) {
+        System.out.println(cmd);
+        String[] args = cmd.split(" ");
+        Command command = checkCommand(args, ip);
         assert command != null;
         try {
             return command.execute();
         } catch (UserDoesntExistException e) {
-
             return USER_DOESNT_EXIST;
         } catch (WrongPasswordException e) {
             return WRONG_PASSWORD;
@@ -218,7 +227,28 @@ public class Main {
             return INVALID_SESSION;
         } catch (UnauthorizedException e) {
             return UNAUTHORIZED;
+        } catch (OnlyAdminException e) {
+            return ONLY_ADMIN;
+        } catch (LockedAccountException e) {
+            return LOCKED_ACCOUNT;
         }
+    }
+
+    private static String getResponse(int res) {
+        if (res == USER_DOESNT_EXIST) {
+            return "User doesn't exist!";
+        } else if (res == WRONG_PASSWORD) {
+            return "Wrong password!";
+        } else if (res == UNAUTHORIZED) {
+            return "Unauthorized!";
+        } else if (res == INVALID_SESSION) {
+            return "Invalid session!";
+        } else if (res == ONLY_ADMIN) {
+            return "This command is only for admins!";
+        } else if (res == LOCKED_ACCOUNT) {
+            return "This account is temporarily locked!";
+        }
+        return "";
     }
 
     public static void main(String[] args) {
@@ -235,7 +265,6 @@ public class Main {
             while (true) {
                 int readyChannels = selector.select();
                 if (readyChannels == 0) {
-                    // select() is blocking but may still return with 0, check javadoc
                     continue;
                 }
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();
@@ -244,43 +273,34 @@ public class Main {
                     SelectionKey key = keyIterator.next();
                     if (key.isReadable()) {
                         SocketChannel sc = (SocketChannel) key.channel();
-
                         buffer.clear();
                         int r = sc.read(buffer);
                         if (r < 0) {
-                            //System.out.println("Client has closed the connection");
                             sc.close();
                             continue;
                         }
                         buffer.flip();
                         String cmd = new String(buffer.array(), StandardCharsets.UTF_8);
                         cmd = cmd.split("\0")[0];
-                        int res = resolveCommand(cmd, sc.getRemoteAddress().toString(), buffer);
+                        int res = resolveCommand(cmd, sc.getRemoteAddress().toString());
                         buffer.clear();
                         if (res < 0) {
-                            if (res == USER_DOESNT_EXIST) {
-                                buffer.put("User doesn't exist!".getBytes(StandardCharsets.UTF_8));
-                            }
+                            buffer.put(getResponse(res).getBytes(StandardCharsets.UTF_8));
                         } else {
                             buffer.put(Integer.toString(res).getBytes(StandardCharsets.UTF_8));
-
                         }
-                        System.out.println("Message sending: " + res);
+                        System.out.println("Sending: " + res);
                         buffer.flip();
                         sc.write(buffer);
-
                     } else if (key.isAcceptable()) {
                         ServerSocketChannel sockChannel = (ServerSocketChannel) key.channel();
                         SocketChannel accept = sockChannel.accept();
                         accept.configureBlocking(false);
                         accept.register(selector, SelectionKey.OP_READ);
                     }
-
                     keyIterator.remove();
                 }
-
             }
-
         } catch (IOException e) {
             throw new RuntimeException("There is a problem with the server socket", e);
         }
