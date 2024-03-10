@@ -10,12 +10,7 @@ import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.Add
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.DeleteUserCommand;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.RemoveAdminCommand;
 
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.LockedAccountException;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UserDoesntExistException;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.WrongPasswordException;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UnauthorizedException;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.OnlyAdminException;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidSessionException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -37,6 +32,8 @@ public class Main {
     public static final int ONLY_ADMIN = -850;
 
     public static final int LOCKED_ACCOUNT = -975;
+
+    public static final int INVALID_ARGUMENTS = -555;
     public static UserRepository userRepository;
     public static AdminRepository adminRepository;
 
@@ -56,11 +53,11 @@ public class Main {
                 sessionId = Integer.parseInt(args[i + 1]);
             }
         }
-        command = new LoginCommand(username, password, sessionId, ip);
+        command = new LoginCommand(username, password, sessionId, ip, userRepository, auditRepository);
         return command;
     }
 
-    static Command resolveRegister(String[] args) {
+    static Command resolveRegister(String[] args) throws InvalidArgumentsException {
         Command command;
         String username = null;
         String password = null;
@@ -80,7 +77,7 @@ public class Main {
                 email = args[i + 1];
             }
         }
-        command = new RegisterCommand(username, password, firstName, lastName, email);
+        command = new RegisterCommand(username, password, firstName, lastName, email, userRepository);
         return command;
     }
 
@@ -104,7 +101,7 @@ public class Main {
                 email = args[i + 1];
             }
         }
-        command = new UpdateUserCommand(sessionId, username, firstName, lastName, email);
+        command = new UpdateUserCommand(sessionId, username, firstName, lastName, email, userRepository);
         return command;
     }
 
@@ -116,7 +113,7 @@ public class Main {
                 sessionId = Integer.parseInt(args[i + 1]);
             }
         }
-        command = new LogoutCommand(sessionId);
+        command = new LogoutCommand(sessionId, userRepository);
         return command;
     }
 
@@ -135,7 +132,7 @@ public class Main {
                 newPassword = args[i + 1];
             }
         }
-        command = new ResetPasswordCommand(sessionId, oldPassword, newPassword);
+        command = new ResetPasswordCommand(sessionId, oldPassword, newPassword, userRepository);
         return command;
     }
 
@@ -184,7 +181,7 @@ public class Main {
         return command;
     }
 
-    private static Command checkCommand(String[] args, String ip) {
+    private static Command checkCommand(String[] args, String ip) throws InvalidArgumentsException {
         if (args[0].equals("login")) {
             return resolveLogin(args, ip);
         }
@@ -215,9 +212,10 @@ public class Main {
     private static int resolveCommand(String cmd, String ip) {
         System.out.println(cmd);
         String[] args = cmd.split(" ");
-        Command command = checkCommand(args, ip);
-        assert command != null;
+
         try {
+            Command command = checkCommand(args, ip);
+            assert command != null;
             return command.execute();
         } catch (UserDoesntExistException e) {
             return USER_DOESNT_EXIST;
@@ -231,6 +229,8 @@ public class Main {
             return ONLY_ADMIN;
         } catch (LockedAccountException e) {
             return LOCKED_ACCOUNT;
+        } catch (InvalidArgumentsException e) {
+            return INVALID_ARGUMENTS;
         }
     }
 
@@ -247,12 +247,14 @@ public class Main {
             return "This command is only for admins!";
         } else if (res == LOCKED_ACCOUNT) {
             return "This account is temporarily locked!";
+        } else if (res == INVALID_ARGUMENTS) {
+            return "Invalid arguments!";
         }
         return "";
     }
 
     public static void main(String[] args) {
-        userRepository = new UserRepository();
+        userRepository = new UserRepository("users.db");
         adminRepository = new AdminRepository();
         auditRepository = new AuditRepository();
 

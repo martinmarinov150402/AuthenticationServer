@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands;
 
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.Main;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserRepository;
 
 import java.security.NoSuchAlgorithmException;
 
@@ -9,15 +9,18 @@ public class ResetPasswordCommand implements Command {
     String oldPassword;
     String newPassword;
 
-    public ResetPasswordCommand(int sessionId, String oldPassword, String newPassword) {
+    UserRepository userRepository;
+
+    public ResetPasswordCommand(int sessionId, String oldPassword, String newPassword, UserRepository userRepository) {
         this.sessionId = sessionId;
         this.oldPassword = oldPassword;
         this.newPassword = newPassword;
+        this.userRepository = userRepository;
     }
 
     public int execute() {
         try {
-            Main.userRepository.updatePassword(sessionId, oldPassword, newPassword);
+            userRepository.updatePassword(sessionId, oldPassword, newPassword);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }

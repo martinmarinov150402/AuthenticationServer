@@ -40,14 +40,15 @@ public class UserRepository {
     private HashMap<String, User> userContainer;
     private HashMap<Integer, UserSession> sessions;
 
-
+    private String dbName;
 
     private static int sessionCount = 0;
 
-    public UserRepository() {
+    public UserRepository(String dbName) {
         userContainer = new HashMap<>();
         sessions = new HashMap<>();
-        File file = new File("users.db");
+        this.dbName = dbName;
+        File file = new File(dbName);
         try {
             if (!file.exists()) {
                 file.createNewFile();
@@ -84,7 +85,7 @@ public class UserRepository {
         User user = new User(username, hash(password), firstName, lastName, email);
         System.out.println("Registering hashed with username " + username + "and password " + hash(password));
         userContainer.put(username, user);
-        File file = new File("users.db");
+        File file = new File(dbName);
         try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(file, true))) {
             output.writeObject(user);
         } catch (FileNotFoundException e) {

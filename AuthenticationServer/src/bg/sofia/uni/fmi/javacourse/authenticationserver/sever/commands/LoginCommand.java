@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands;
 
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.Main;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.AuditRepository;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserRepository;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserSession;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.audit.FailedLoginEntry;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.audit.UserEntry;
@@ -18,13 +19,23 @@ public class LoginCommand implements Command {
 
     private final String ip;
 
-    int sessionId;
+    private final UserRepository userRepository;
 
-    public LoginCommand(String username, String password, int sessionId, String ip ) {
+    int sessionId;
+    AuditRepository auditRepository;
+
+    public LoginCommand(String username,
+                        String password,
+                        int sessionId,
+                        String ip,
+                        UserRepository userRepository,
+                        AuditRepository auditRepository) {
         this.username = username;
         this.password = password;
         this.sessionId = sessionId;
         this.ip = ip;
+        this.userRepository = userRepository;
+        this.auditRepository = auditRepository;
     }
 
     @Override
@@ -33,9 +44,9 @@ public class LoginCommand implements Command {
             System.out.println("Logging with username " + username + "and password " + password);
             UserSession us;
             if (username != null) {
-                us = Main.userRepository.loginUser(username, password);
+                us = userRepository.loginUser(username, password);
             } else {
-                us = Main.userRepository.loginSession(sessionId);
+                us = userRepository.loginSession(sessionId);
             }
             us.setIp(ip);
 
@@ -43,7 +54,7 @@ public class LoginCommand implements Command {
         } catch (WrongPasswordException | NoSuchAlgorithmException e) {
             System.out.println("Wrong password!");
             UserEntry userEntry = new UserEntry(username, ip);
-            Main.auditRepository.addEntry(new FailedLoginEntry(LocalDateTime.now(), userEntry));
+            auditRepository.addEntry(new FailedLoginEntry(LocalDateTime.now(), userEntry));
             throw new WrongPasswordException();
         }
         //return 1;
