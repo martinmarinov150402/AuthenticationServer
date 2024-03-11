@@ -175,6 +175,8 @@ public class UserRepository {
         String oldPasswordHash = hash(oldPassword);
         if (oldPasswordHash.equals(us.getUser().getPassHash())) {
             us.getUser().setPassHash(hash(newPassword));
+        } else {
+            throw new WrongPasswordException();
         }
     }
 }

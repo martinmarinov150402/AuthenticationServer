@@ -6,10 +6,7 @@ import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.LoginComm
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.LogoutCommand;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.RegisterCommand;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.ResetPasswordCommand;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidArgumentsException;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidSessionException;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.LockedAccountException;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UserDoesntExistException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.*;
 import org.junit.jupiter.api.*;
 
 import java.io.File;
@@ -103,7 +100,7 @@ public class CommandTest {
 
     @Test
     @Order(11)
-    void testResetPasswordCommand() throws UserDoesntExistException, LockedAccountException {
+    void testResetPasswordCommand() throws UserDoesntExistException, LockedAccountException, InvalidArgumentsException {
         LoginCommand lc = new LoginCommand("marto", "222", -5, "IP", userRepo, auditRepository);
         int session = lc.execute();
         ResetPasswordCommand rpc = new ResetPasswordCommand(session, "222", "123", userRepo);
@@ -113,6 +110,38 @@ public class CommandTest {
         LoginCommand lc2 = new LoginCommand("marto", "123", -5, "IP", userRepo, auditRepository);
         Assertions.assertTrue(lc2.execute() >= 0);
 
+    }
+
+    @Order(12)
+    @Test
+    void testResetPasswordCommandWithInvalidSession() throws InvalidArgumentsException {
+        ResetPasswordCommand rpc = new ResetPasswordCommand(2000, "123", "222", userRepo);
+        Assertions.assertThrows(InvalidSessionException.class, () -> rpc.execute());
+    }
+
+    @Order(13)
+    @Test
+    void testResetPasswordCommandWithInvalidOldPassword() throws UserDoesntExistException, LockedAccountException, InvalidArgumentsException {
+        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
+        int session = lc.execute();
+        ResetPasswordCommand rpc = new ResetPasswordCommand(session, "555", "123", userRepo);
+        Assertions.assertThrows(WrongPasswordException.class, () -> rpc.execute());
+    }
+
+    @Order(14)
+    @Test
+    void testResetPasswordCommandWithNullNewPassword() throws UserDoesntExistException, LockedAccountException {
+        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
+        int session = lc.execute();
+        Assertions.assertThrows(InvalidArgumentsException.class, () -> new ResetPasswordCommand(session, "123", null, userRepo));
+
+    }
+    @Order(15)
+    @Test
+    void testResetPasswordCommandWithBlankNewPassword() throws UserDoesntExistException, LockedAccountException {
+        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
+        int session = lc.execute();
+        Assertions.assertThrows(InvalidArgumentsException.class, () -> new ResetPasswordCommand(session, "123", "", userRepo));
     }
 
     @AfterAll

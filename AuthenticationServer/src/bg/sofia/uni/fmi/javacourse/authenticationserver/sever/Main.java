@@ -117,7 +117,7 @@ public class Main {
         return command;
     }
 
-    static Command resolveResetPassword(String[] args) {
+    static Command resolveResetPassword(String[] args) throws InvalidArgumentsException {
         Command command;
         int sessionId = -1;
         String oldPassword = null;
