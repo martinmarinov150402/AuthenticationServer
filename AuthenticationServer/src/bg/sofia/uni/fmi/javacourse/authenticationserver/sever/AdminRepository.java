@@ -3,7 +3,14 @@ package bg.sofia.uni.fmi.javacourse.authenticationserver.sever;
 import java.util.HashSet;
 
 public class AdminRepository {
+
+    private UserRepository userRepository;
     private HashSet<String> admins;
+
+    public AdminRepository(UserRepository userRepository) {
+        this.admins = new HashSet<>();
+        this.userRepository = userRepository;
+    }
 
     public void addAdmin(String username) {
         admins.add(username);
@@ -14,7 +21,7 @@ public class AdminRepository {
     }
 
     public boolean checkAdminBySession(int sessionId) {
-        return checkAdmin(Main.userRepository.loginSession(sessionId).getUser().getUsername());
+        return checkAdmin(userRepository.loginSession(sessionId).getUser().getUsername());
     }
 
     public void removeAdmin(String username) {

@@ -81,7 +81,7 @@ public class Main {
         return command;
     }
 
-    static Command resolveUpdate(String[] args) {
+    static Command resolveUpdate(String[] args) throws InvalidArgumentsException {
         Command command;
         String username = null;
         int sessionId = -1;
@@ -136,7 +136,7 @@ public class Main {
         return command;
     }
 
-    static Command resolveAddAdmin(String[] args) {
+    static Command resolveAddAdmin(String[] args, String ip) throws InvalidArgumentsException {
         Command command;
         int sessionId = -1;
         String username = null;
@@ -147,11 +147,11 @@ public class Main {
                 username = args[i + 1];
             }
         }
-        command = new AddAdminCommand(sessionId, username);
+        command = new AddAdminCommand(sessionId, username, userRepository, auditRepository, adminRepository, ip);
         return command;
     }
 
-    static Command resolveRemoveAdmin(String[] args) {
+    static Command resolveRemoveAdmin(String[] args) throws InvalidArgumentsException {
         Command command;
         int sessionId = -1;
         String username = null;
@@ -162,7 +162,7 @@ public class Main {
                 username = args[i + 1];
             }
         }
-        command = new RemoveAdminCommand(sessionId, username);
+        command = new RemoveAdminCommand(sessionId, username, userRepository, adminRepository, auditRepository);
         return command;
     }
 
@@ -198,7 +198,7 @@ public class Main {
             return resolveLogout(args);
         }
         if (args[0].equals("add-admin-user")) {
-            return resolveAddAdmin(args);
+            return resolveAddAdmin(args, ip);
         }
         if (args[0].equals("remove-admin-user")) {
             return resolveRemoveAdmin(args);
@@ -255,7 +255,7 @@ public class Main {
 
     public static void main(String[] args) {
         userRepository = new UserRepository("users.db");
-        adminRepository = new AdminRepository();
+        adminRepository = new AdminRepository(userRepository);
         auditRepository = new AuditRepository();
 
         try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()) {

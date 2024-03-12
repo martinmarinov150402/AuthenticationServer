@@ -139,19 +139,28 @@ public class UserRepository {
         if (sessionId == -1) {
             throw new UnauthorizedException();
         }
+
         UserSession session = loginSession(sessionId);
+
+        userContainer.remove(session.getUser().getUsername());
+
         if (newUserName != null) {
             session.getUser().setUsername(newUserName);
+
         }
         if (newFirstName != null) {
             session.getUser().setFirstName(newFirstName);
+
         }
         if (newLastName != null) {
             session.getUser().setLastName(newLastName);
+
         }
         if (newEmail != null) {
             session.getUser().setEmail(newEmail);
         }
+
+        userContainer.put(session.getUser().getUsername(), session.getUser());
     }
 
     public UserSession loginSession(int sessionId) {

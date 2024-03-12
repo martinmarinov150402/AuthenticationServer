@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands;
 
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserRepository;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidArgumentsException;
 
 public class UpdateUserCommand implements Command {
 
@@ -17,7 +18,18 @@ public class UpdateUserCommand implements Command {
                              String newFirstName,
                              String newLastName,
                              String newEmail,
-                             UserRepository userRepository) {
+                             UserRepository userRepository) throws InvalidArgumentsException {
+
+        if (newUserName == null ||
+            newUserName.isBlank() ||
+            newFirstName == null ||
+            newFirstName.isBlank() ||
+            newLastName == null ||
+            newLastName.isBlank() ||
+            newEmail == null ||
+            newEmail.isBlank()) {
+            throw new InvalidArgumentsException();
+        }
         this.sessionId = sessionId;
         this.newUserName = newUserName;
         this.newFirstName = newFirstName;

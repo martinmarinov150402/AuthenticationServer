@@ -2,14 +2,12 @@ package bg.sofia.uni.fmi.javacourse.authenticationserver.server;
 
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.AuditRepository;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserRepository;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.LoginCommand;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.LogoutCommand;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.RegisterCommand;
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.ResetPasswordCommand;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.*;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.*;
 import org.junit.jupiter.api.*;
 
 import java.io.File;
+import java.security.NoSuchAlgorithmException;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CommandTest {
@@ -18,9 +16,11 @@ public class CommandTest {
     static AuditRepository auditRepository;
 
     @BeforeAll
-    static void init() {
+    static void init() throws NoSuchAlgorithmException {
         userRepo = new UserRepository("usersTest.db");
         auditRepository = new AuditRepository();
+        userRepo.createUser("admin", "admin", "Admin", "Admin", "admin@a.b");
+
     }
 
     @Test
@@ -142,6 +142,60 @@ public class CommandTest {
         LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
         int session = lc.execute();
         Assertions.assertThrows(InvalidArgumentsException.class, () -> new ResetPasswordCommand(session, "123", "", userRepo));
+    }
+
+    @Order(16)
+    @Test
+    void testUpdateUserWithNullUsername() throws UserDoesntExistException, LockedAccountException {
+        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
+        int session = lc.execute();
+        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, null, "Ivan", "Ivanov", "i@i.bg", userRepo));
+    }
+    @Order(17)
+    @Test
+    void testUpdateUserWithBlankUsername() throws UserDoesntExistException, LockedAccountException {
+        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
+        int session = lc.execute();
+        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, "", "Ivan", "Ivanov", "i@i.bg", userRepo));
+    }
+    @Order(18)
+    @Test
+    void testUpdateUserWithNullNewFirstName() throws UserDoesntExistException, LockedAccountException {
+        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
+        int session = lc.execute();
+        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, "marto", null, "Ivanov", "i@i.bg", userRepo));
+    }
+    @Order(19)
+    @Test
+    void testUpdateUserWithBlankFirstName() throws UserDoesntExistException, LockedAccountException {
+        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
+        int session = lc.execute();
+        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, "marto", "", "Ivanov", "i@i.bg", userRepo));
+    }
+    @Order(20)
+    @Test
+    void testUpdateUserWithNullNewLastName() throws UserDoesntExistException, LockedAccountException {
+        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
+        int session = lc.execute();
+        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, "marto", "Ivan" ,null, "i@i.bg", userRepo));
+    }
+    @Order(21)
+    @Test
+    void testUpdateUserWithBlankLastName() throws UserDoesntExistException, LockedAccountException {
+        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
+        int session = lc.execute();
+        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, "marto", "Ivan", "", "i@i.bg", userRepo));
+    }
+    @Order(22)
+    @Test
+    void testUpdateUser() throws UserDoesntExistException, LockedAccountException, InvalidArgumentsException {
+        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
+        int session = lc.execute();
+        UpdateUserCommand uuc = new UpdateUserCommand(session, "vaka", "Ivan", "Ivanov", "i@i.bg", userRepo);
+        uuc.execute();
+        LoginCommand lc2 = new LoginCommand("vaka", "123", 0,"IP", userRepo, auditRepository);
+        Assertions.assertTrue(lc2.execute() >= 0);
+        
     }
 
     @AfterAll
