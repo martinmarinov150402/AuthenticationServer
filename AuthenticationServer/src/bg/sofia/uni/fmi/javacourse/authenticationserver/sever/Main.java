@@ -166,7 +166,7 @@ public class Main {
         return command;
     }
 
-    static Command resolveDeleteUser(String[] args) {
+    static Command resolveDeleteUser(String[] args) throws InvalidArgumentsException {
         Command command;
         int sessionId = -1;
         String username = null;
@@ -177,7 +177,7 @@ public class Main {
                 username = args[i + 1];
             }
         }
-        command = new DeleteUserCommand(sessionId, username);
+        command = new DeleteUserCommand(sessionId, username, userRepository, adminRepository);
         return command;
     }
 

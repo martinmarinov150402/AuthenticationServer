@@ -33,8 +33,10 @@ import java.io.EOFException;
 
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.security.MessageDigest;
+import java.util.List;
 
 public class UserRepository {
     private HashMap<String, User> userContainer;
@@ -79,6 +81,11 @@ public class UserRepository {
         return new String(digest);
     }
 
+    public boolean userExist(String username) {
+        return userContainer.containsKey(username);
+
+    }
+
     public User createUser(String username, String password, String firstName, String lastName, String email)
             throws NoSuchAlgorithmException {
 
@@ -97,11 +104,13 @@ public class UserRepository {
     }
 
     public void removeUser(String username) {
+        List<Integer> sessionsToDel = new ArrayList<Integer>();
         sessions.forEach((id, session) -> {
             if (session.getUser().getUsername().equals(username)) {
-                logout(id);
+                sessionsToDel.add(id);
             }
         });
+        sessionsToDel.forEach(el -> logout(el));
         userContainer.remove(username);
     }
 

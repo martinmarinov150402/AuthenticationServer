@@ -5,6 +5,7 @@ import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.AuditRepository;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserRepository;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.LoginCommand;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.AddAdminCommand;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.DeleteUserCommand;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.RemoveAdminCommand;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.*;
 import org.junit.jupiter.api.*;
@@ -109,6 +110,108 @@ public class AdminCommandsTest {
         int session = lc.execute();
         Assertions.assertThrows(InvalidArgumentsException.class,
                 () -> new AddAdminCommand(session, "", userRepo, auditRepository, adminRepo, "IP"));
+    }
+
+    @Test
+    @Order(7)
+    void testAddAdmin() throws UserDoesntExistException, LockedAccountException, InvalidArgumentsException {
+        LoginCommand lc = new LoginCommand("admin",
+                "admin",
+                0,
+                "IP",
+                userRepo,
+                auditRepository);
+        int session = lc.execute();
+        AddAdminCommand ac = new AddAdminCommand(session, "marto", userRepo, auditRepository, adminRepo, "IP");
+        ac.execute();
+        Assertions.assertTrue(adminRepo.checkAdmin("marto"));
+    }
+
+    @Test
+    @Order(8)
+    void testRemoveAdmin() throws UserDoesntExistException, LockedAccountException, InvalidArgumentsException {
+        LoginCommand lc = new LoginCommand("admin",
+                "admin",
+                0,
+                "IP",
+                userRepo,
+                auditRepository);
+        int session = lc.execute();
+        RemoveAdminCommand rac = new RemoveAdminCommand(session, "marto", userRepo, adminRepo, auditRepository);
+        rac.execute();
+        Assertions.assertFalse(adminRepo.checkAdmin("marto"));
+    }
+    @Test
+    @Order(9)
+    void testDeleteUserWithInvalidSession() throws InvalidArgumentsException {
+        DeleteUserCommand duc = new DeleteUserCommand(55, "marto", userRepo, adminRepo);
+        Assertions.assertThrows(InvalidSessionException.class, () -> duc.execute());
+    }
+    @Test
+    @Order(10)
+    void testDeleteUserWithNullUsername() throws UserDoesntExistException, LockedAccountException {
+        LoginCommand lc = new LoginCommand("admin",
+                "admin",
+                0,
+                "IP",
+                userRepo,
+                auditRepository);
+        int session = lc.execute();
+        Assertions.assertThrows(InvalidArgumentsException.class, () -> new DeleteUserCommand(session, null, userRepo, adminRepo));
+
+    }
+    @Test
+    @Order(11)
+    void testDeleteUserWithBlankUsername() throws UserDoesntExistException, LockedAccountException {
+        LoginCommand lc = new LoginCommand("admin",
+                "admin",
+                0,
+                "IP",
+                userRepo,
+                auditRepository);
+        int session = lc.execute();
+        Assertions.assertThrows(InvalidArgumentsException.class, () -> new DeleteUserCommand(session, "", userRepo, adminRepo));
+
+    }
+    @Test
+    @Order(12)
+    void testDeleteUserWithoutRights() throws UserDoesntExistException, LockedAccountException, InvalidArgumentsException {
+        LoginCommand lc = new LoginCommand("marto",
+                "123",
+                0,
+                "IP",
+                userRepo,
+                auditRepository);
+        int session = lc.execute();
+        DeleteUserCommand duc = new DeleteUserCommand(session, "marto", userRepo, adminRepo);
+        Assertions.assertThrows(UnauthorizedException.class, () -> duc.execute());
+    }
+    @Test
+    @Order(13)
+    void testDeleteUserWithInvalidUsername() throws UserDoesntExistException, LockedAccountException, InvalidArgumentsException {
+        LoginCommand lc = new LoginCommand("admin",
+                "admin",
+                0,
+                "IP",
+                userRepo,
+                auditRepository);
+        int session = lc.execute();
+        DeleteUserCommand duc = new DeleteUserCommand(session, "peturPeshev", userRepo, adminRepo);
+        Assertions.assertThrows(UserDoesntExistException.class, () -> duc.execute());
+    }
+    @Test
+    @Order(14)
+    void testDeleteUser() throws UserDoesntExistException, LockedAccountException, NoSuchAlgorithmException, InvalidArgumentsException {
+        LoginCommand lc = new LoginCommand("admin",
+                "admin",
+                0,
+                "IP",
+                userRepo,
+                auditRepository);
+        int session = lc.execute();
+        DeleteUserCommand duc = new DeleteUserCommand(session, "marto", userRepo, adminRepo);
+        duc.execute();
+        Assertions.assertFalse(userRepo.userExist("marto"));
     }
 
     @AfterAll
