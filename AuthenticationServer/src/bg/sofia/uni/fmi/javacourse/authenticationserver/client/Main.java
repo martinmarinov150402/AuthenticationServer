@@ -20,7 +20,7 @@ public class Main {
             System.out.println("Connected to the server.");
             while (true) {
                 System.out.print("CMD: ");
-                String message = scanner.nextLine(); // read a line from the console
+                String message = scanner.nextLine(); 
                 if ("quit".equals(message)) {
                     break;
                 }
@@ -44,4 +44,3 @@ public class Main {
         }
     }
 }
-//register --username m --password 123 --first-name m --last-name m --email m

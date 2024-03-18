@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.javacourse.authenticationserver.server;
 
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.AuditRepository;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.Config;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserRepository;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.*;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.*;
@@ -155,6 +156,23 @@ public class CommandTest {
         LoginCommand lc2 = new LoginCommand("vaka", "123", 0,"IP", userRepo, auditRepository);
         Assertions.assertTrue(lc2.execute() >= 0);
         
+    }
+
+    @Order(17)
+    @Test
+    void testLockedAccount() throws UserDoesntExistException, LockedAccountException, InvalidArgumentsException {
+        RegisterCommand rc = new RegisterCommand("marto", "123", "Martin", "Marinov", "m@m.b", userRepo);
+        rc.execute();
+        LoginCommand lc = new LoginCommand("marto", "wrong", 0, "IP", userRepo, auditRepository);
+        for(int i = 0; i < Config.UNSUCCESSFUL_LOGIN_ATTEMPTS; i++) {
+            try {
+                lc.execute();
+            } catch(WrongPasswordException e) {
+                System.out.println("Wrong as expected");
+            }
+
+        }
+        Assertions.assertThrows(LockedAccountException.class, () -> lc.execute());
     }
 
     @AfterAll

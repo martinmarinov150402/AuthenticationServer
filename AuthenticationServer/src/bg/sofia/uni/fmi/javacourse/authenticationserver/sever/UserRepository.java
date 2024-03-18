@@ -55,22 +55,27 @@ public class UserRepository {
             if (!file.exists()) {
                 file.createNewFile();
             }
-            ObjectInputStream input = new ObjectInputStream(new FileInputStream(file));
+            MyObjectInputStream input = new MyObjectInputStream(new FileInputStream(file));
             System.out.println("TUKA");
-            User tmp;
+            /*User tmp;
             do {
                 tmp = (User)input.readObject();
                 userContainer.put(tmp.getUsername(), tmp);
             }
-            while(tmp != null);
-            System.out.println(tmp.toString());
+            while(tmp != null);*/
+
+            Object userObject;
+            while ((userObject = input.readObject()) != null) {
+                System.out.println(userObject);
+
+                User s = (User) userObject;
+                userContainer.put(s.getUsername(), s);
+            }
             input.close();
 
         } catch (EOFException e) {
             e.toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 
@@ -95,9 +100,9 @@ public class UserRepository {
         System.out.println("Registering hashed with username " + username + "and password " + hash(password));
         userContainer.put(username, user);
         File file = new File(dbName);
-        try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(file, true))) {
-            output.reset();
+        try (MyObjectOutputStream output = new MyObjectOutputStream(new FileOutputStream(file, true))) {
             output.writeObject(user);
+            output.flush();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
