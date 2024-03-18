@@ -3,6 +3,7 @@ package bg.sofia.uni.fmi.javacourse.authenticationserver.server;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.AuditRepository;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.Config;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserRepository;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserSession;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.*;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.*;
 import org.junit.jupiter.api.*;
@@ -173,6 +174,19 @@ public class CommandTest {
 
         }
         Assertions.assertThrows(LockedAccountException.class, () -> lc.execute());
+    }
+    @Order(18)
+    @Test
+    void testUpdateUserWithoutSomeParams() throws UserDoesntExistException, LockedAccountException, InvalidArgumentsException {
+        RegisterCommand rc = new RegisterCommand("marto2", "123", "Martin", "Marinov", "ma@ma.b", userRepo);
+        rc.execute();
+        LoginCommand lc = new LoginCommand("marto2", "123", 0, "IP", userRepo, auditRepository);
+        int session = lc.execute();
+        UpdateUserCommand uuc = new UpdateUserCommand(session, null, "Marto", null, "m@marto.b", userRepo);
+        uuc.execute();
+        UserSession s = userRepo.loginSession(session);
+        Assertions.assertEquals("Marto", s.getUser().getFirstName());
+
     }
 
     @AfterAll

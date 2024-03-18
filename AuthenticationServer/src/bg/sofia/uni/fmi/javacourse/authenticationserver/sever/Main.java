@@ -40,6 +40,7 @@ public class Main {
     public static final int LOCKED_ACCOUNT = -975;
 
     public static final int INVALID_ARGUMENTS = -555;
+    public static final int INVALID_COMMAND = -875;
     public static UserRepository userRepository;
     public static AdminRepository adminRepository;
 
@@ -221,7 +222,9 @@ public class Main {
 
         try {
             Command command = checkCommand(args, ip);
-            assert command != null;
+            if (command == null) {
+                return INVALID_COMMAND;
+            }
             return command.execute();
         } catch (UserDoesntExistException e) {
             return USER_DOESNT_EXIST;
@@ -255,6 +258,8 @@ public class Main {
             return "This account is temporarily locked!";
         } else if (res == INVALID_ARGUMENTS) {
             return "Invalid arguments!";
+        } else if (res == INVALID_COMMAND) {
+            return "Invalid command";
         }
         return "";
     }
