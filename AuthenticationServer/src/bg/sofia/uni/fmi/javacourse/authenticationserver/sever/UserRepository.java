@@ -56,12 +56,14 @@ public class UserRepository {
                 file.createNewFile();
             }
             ObjectInputStream input = new ObjectInputStream(new FileInputStream(file));
+            System.out.println("TUKA");
             User tmp;
             do {
                 tmp = (User)input.readObject();
                 userContainer.put(tmp.getUsername(), tmp);
             }
             while(tmp != null);
+            System.out.println(tmp.toString());
             input.close();
 
         } catch (EOFException e) {
@@ -94,6 +96,7 @@ public class UserRepository {
         userContainer.put(username, user);
         File file = new File(dbName);
         try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(file, true))) {
+            output.reset();
             output.writeObject(user);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);

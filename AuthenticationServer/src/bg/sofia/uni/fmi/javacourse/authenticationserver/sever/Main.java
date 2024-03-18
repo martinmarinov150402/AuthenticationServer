@@ -10,7 +10,13 @@ import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.Add
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.DeleteUserCommand;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin.RemoveAdminCommand;
 
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.*;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidArgumentsException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UserDoesntExistException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.WrongPasswordException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.UnauthorizedException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.OnlyAdminException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.LockedAccountException;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.exceptions.InvalidSessionException;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -181,7 +187,7 @@ public class Main {
         return command;
     }
 
-    private static Command checkCommand(String[] args, String ip) throws InvalidArgumentsException {
+    public static Command checkCommand(String[] args, String ip) throws InvalidArgumentsException {
         if (args[0].equals("login")) {
             return resolveLogin(args, ip);
         }
@@ -253,16 +259,49 @@ public class Main {
         return "";
     }
 
+    private static void configureServerSocketChannel(ServerSocketChannel serverSocketChannel, Selector selector)
+            throws IOException {
+        serverSocketChannel.bind(new InetSocketAddress(Config.SERVER_HOST, Config.SERVER_PORT));
+        serverSocketChannel.configureBlocking(false);
+        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+    }
+
+    private static void handleRead(SocketChannel sc, ByteBuffer buffer) throws IOException {
+        buffer.clear();
+        int r = sc.read(buffer);
+        if (r < 0) {
+            sc.close();
+            return;
+        }
+        buffer.flip();
+        String cmd = new String(buffer.array(), StandardCharsets.UTF_8);
+        cmd = cmd.split("\0")[0];
+        int res = resolveCommand(cmd, sc.getRemoteAddress().toString());
+        buffer.clear();
+        if (res < 0) {
+            buffer.put(getResponse(res).getBytes(StandardCharsets.UTF_8));
+        } else {
+            buffer.put(Integer.toString(res).getBytes(StandardCharsets.UTF_8));
+        }
+        System.out.println("Sending: " + res);
+        buffer.flip();
+        sc.write(buffer);
+    }
+
+    private static void acceptConnection(SelectionKey key, Selector selector) throws IOException {
+        ServerSocketChannel sockChannel = (ServerSocketChannel) key.channel();
+        SocketChannel accept = sockChannel.accept();
+        accept.configureBlocking(false);
+        accept.register(selector, SelectionKey.OP_READ);
+    }
+
     public static void main(String[] args) {
         userRepository = new UserRepository("users.db");
         adminRepository = new AdminRepository(userRepository);
         auditRepository = new AuditRepository();
-
         try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()) {
-            serverSocketChannel.bind(new InetSocketAddress(Config.SERVER_HOST, Config.SERVER_PORT));
-            serverSocketChannel.configureBlocking(false);
             Selector selector = Selector.open();
-            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+            configureServerSocketChannel(serverSocketChannel, selector);
             ByteBuffer buffer = ByteBuffer.allocate(Config.BUFFER_SIZE);
             while (true) {
                 int readyChannels = selector.select();
@@ -275,30 +314,9 @@ public class Main {
                     SelectionKey key = keyIterator.next();
                     if (key.isReadable()) {
                         SocketChannel sc = (SocketChannel) key.channel();
-                        buffer.clear();
-                        int r = sc.read(buffer);
-                        if (r < 0) {
-                            sc.close();
-                            continue;
-                        }
-                        buffer.flip();
-                        String cmd = new String(buffer.array(), StandardCharsets.UTF_8);
-                        cmd = cmd.split("\0")[0];
-                        int res = resolveCommand(cmd, sc.getRemoteAddress().toString());
-                        buffer.clear();
-                        if (res < 0) {
-                            buffer.put(getResponse(res).getBytes(StandardCharsets.UTF_8));
-                        } else {
-                            buffer.put(Integer.toString(res).getBytes(StandardCharsets.UTF_8));
-                        }
-                        System.out.println("Sending: " + res);
-                        buffer.flip();
-                        sc.write(buffer);
+                        handleRead(sc, buffer);
                     } else if (key.isAcceptable()) {
-                        ServerSocketChannel sockChannel = (ServerSocketChannel) key.channel();
-                        SocketChannel accept = sockChannel.accept();
-                        accept.configureBlocking(false);
-                        accept.register(selector, SelectionKey.OP_READ);
+                        acceptConnection(key, selector);
                     }
                     keyIterator.remove();
                 }

@@ -15,6 +15,13 @@ public class DeleteUserCommand implements Command {
     UserRepository userRepository;
     AdminRepository adminRepository;
 
+    public int getSessionId() {
+        return sessionId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
 
     public DeleteUserCommand(int sessionId,
                              String username,

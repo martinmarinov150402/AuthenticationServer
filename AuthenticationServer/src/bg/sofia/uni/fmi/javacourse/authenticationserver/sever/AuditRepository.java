@@ -17,6 +17,11 @@ public class AuditRepository {
         logs = new ArrayList<>();
     }
 
+    public AuditEntry getLatest() {
+        return logs.getLast();
+
+    }
+
     public void addEntry(AuditEntry entry) {
 
         logs.add(entry);

@@ -8,6 +8,10 @@ public class LogoutCommand implements Command {
 
     UserRepository userRepository;
 
+    public int getSessionId() {
+        return sessionId;
+    }
+
     public LogoutCommand(int sessionId, UserRepository userRepository) {
         this.sessionId = sessionId;
         this.userRepository = userRepository;

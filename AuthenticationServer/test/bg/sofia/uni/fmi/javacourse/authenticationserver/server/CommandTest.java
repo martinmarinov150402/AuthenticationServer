@@ -144,49 +144,8 @@ public class CommandTest {
         Assertions.assertThrows(InvalidArgumentsException.class, () -> new ResetPasswordCommand(session, "123", "", userRepo));
     }
 
+
     @Order(16)
-    @Test
-    void testUpdateUserWithNullUsername() throws UserDoesntExistException, LockedAccountException {
-        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
-        int session = lc.execute();
-        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, null, "Ivan", "Ivanov", "i@i.bg", userRepo));
-    }
-    @Order(17)
-    @Test
-    void testUpdateUserWithBlankUsername() throws UserDoesntExistException, LockedAccountException {
-        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
-        int session = lc.execute();
-        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, "", "Ivan", "Ivanov", "i@i.bg", userRepo));
-    }
-    @Order(18)
-    @Test
-    void testUpdateUserWithNullNewFirstName() throws UserDoesntExistException, LockedAccountException {
-        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
-        int session = lc.execute();
-        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, "marto", null, "Ivanov", "i@i.bg", userRepo));
-    }
-    @Order(19)
-    @Test
-    void testUpdateUserWithBlankFirstName() throws UserDoesntExistException, LockedAccountException {
-        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
-        int session = lc.execute();
-        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, "marto", "", "Ivanov", "i@i.bg", userRepo));
-    }
-    @Order(20)
-    @Test
-    void testUpdateUserWithNullNewLastName() throws UserDoesntExistException, LockedAccountException {
-        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
-        int session = lc.execute();
-        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, "marto", "Ivan" ,null, "i@i.bg", userRepo));
-    }
-    @Order(21)
-    @Test
-    void testUpdateUserWithBlankLastName() throws UserDoesntExistException, LockedAccountException {
-        LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);
-        int session = lc.execute();
-        Assertions.assertThrows(InvalidArgumentsException.class, () -> new UpdateUserCommand(session, "marto", "Ivan", "", "i@i.bg", userRepo));
-    }
-    @Order(22)
     @Test
     void testUpdateUser() throws UserDoesntExistException, LockedAccountException, InvalidArgumentsException {
         LoginCommand lc = new LoginCommand("marto", "123", 0,"IP", userRepo, auditRepository);

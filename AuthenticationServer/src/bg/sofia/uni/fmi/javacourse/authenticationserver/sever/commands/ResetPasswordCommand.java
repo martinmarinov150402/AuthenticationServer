@@ -12,6 +12,18 @@ public class ResetPasswordCommand implements Command {
 
     UserRepository userRepository;
 
+    public int getSessionId() {
+        return sessionId;
+    }
+
+    public String getOldPassword() {
+        return oldPassword;
+    }
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+
     public ResetPasswordCommand(int sessionId, String oldPassword, String newPassword, UserRepository userRepository) throws InvalidArgumentsException {
         if (oldPassword == null || oldPassword.isBlank() || newPassword == null || newPassword.isBlank()) {
             throw new InvalidArgumentsException();

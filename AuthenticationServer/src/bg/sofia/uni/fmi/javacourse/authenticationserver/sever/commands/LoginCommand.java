@@ -38,6 +38,18 @@ public class LoginCommand implements Command {
         this.auditRepository = auditRepository;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
     @Override
     public int execute() throws UserDoesntExistException, LockedAccountException {
         try {

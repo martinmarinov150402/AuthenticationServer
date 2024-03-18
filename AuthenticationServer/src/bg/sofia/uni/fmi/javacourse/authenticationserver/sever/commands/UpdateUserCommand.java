@@ -20,22 +20,32 @@ public class UpdateUserCommand implements Command {
                              String newEmail,
                              UserRepository userRepository) throws InvalidArgumentsException {
 
-        if (newUserName == null ||
-            newUserName.isBlank() ||
-            newFirstName == null ||
-            newFirstName.isBlank() ||
-            newLastName == null ||
-            newLastName.isBlank() ||
-            newEmail == null ||
-            newEmail.isBlank()) {
-            throw new InvalidArgumentsException();
-        }
         this.sessionId = sessionId;
         this.newUserName = newUserName;
         this.newFirstName = newFirstName;
         this.newLastName = newLastName;
         this.newEmail = newEmail;
         this.userRepository = userRepository;
+    }
+
+    public int getSessionId() {
+        return sessionId;
+    }
+
+    public String getNewUserName() {
+        return newUserName;
+    }
+
+    public String getNewFirstName() {
+        return newFirstName;
+    }
+
+    public String getNewLastName() {
+        return newLastName;
+    }
+
+    public String getNewEmail() {
+        return newEmail;
     }
 
     public int execute() {

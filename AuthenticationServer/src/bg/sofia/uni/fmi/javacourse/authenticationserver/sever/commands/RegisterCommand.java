@@ -44,6 +44,26 @@ public class RegisterCommand implements Command {
         this.userRepo = userRepo;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
     public int execute() {
 
         try {

@@ -1,6 +1,9 @@
 package bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.admin;
 
-import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.*;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserRepository;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.AdminRepository;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.AuditRepository;
+import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.UserSession;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.audit.ChangeResourceEntry;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.audit.UserEntry;
 import bg.sofia.uni.fmi.javacourse.authenticationserver.sever.commands.Command;
@@ -20,6 +23,18 @@ public class AddAdminCommand implements Command {
 
     public String username;
 
+    public int getSessionId() {
+        return sessionId;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
     public AddAdminCommand(int sessionId,
                            String username,
                            UserRepository userRepository,
@@ -35,6 +50,10 @@ public class AddAdminCommand implements Command {
         this.auditRepository = auditRepository;
         this.adminRepository = adminRepository;
         this.ip = ip;
+
+    }
+
+    public int execute() {
         UserSession session = userRepository.loginSession(sessionId);
         UserEntry userEntry = new UserEntry(session.getUser().getUsername(), session.getIp());
 
@@ -42,22 +61,17 @@ public class AddAdminCommand implements Command {
                 "is trying to give admin access to", username);
 
         auditRepository.addEntry(entry);
-    }
-
-    public int execute() {
         if (adminRepository.checkAdminBySession(sessionId)) {
             adminRepository.addAdmin(username);
-            UserEntry userEntry = new UserEntry(userRepository.loginSession(sessionId).getUser().getUsername(),
-                    ip);
-            ChangeResourceEntry entry = new ChangeResourceEntry(LocalDateTime.now(), userEntry,
+
+            ChangeResourceEntry entry2 = new ChangeResourceEntry(LocalDateTime.now(), userEntry,
                     "has given admin access to", username);
-            auditRepository.addEntry(entry);
+            auditRepository.addEntry(entry2);
         } else {
-            UserEntry userEntry = new UserEntry(userRepository.loginSession(sessionId).getUser().getUsername(),
-                    ip);
-            ChangeResourceEntry entry = new ChangeResourceEntry(LocalDateTime.now(), userEntry,
+
+            ChangeResourceEntry entry2 = new ChangeResourceEntry(LocalDateTime.now(), userEntry,
                     "didn't succeed to give admin access of", username);
-            auditRepository.addEntry(entry);
+            auditRepository.addEntry(entry2);
             throw new UnauthorizedException();
         }
         return 1;
